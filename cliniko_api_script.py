@@ -4,7 +4,7 @@ import datetime
 from clickhouse_connect import get_client
 from keys.keys import API_KEY, PASSWORD, HOST_CLICKHOUSE, CLIENT_NAME, CLIENT_INSTANCE
 
-BATCH_SIZE = 500  # For batch inserts
+BATCH_SIZE = 800  # For batch inserts
 
 # Helper conversion functions
 def safe_str(val):
@@ -350,13 +350,13 @@ def transform_individual_appointment(item):
     patient_url = safe_str(item.get("patient", {}).get("links", {}).get("self", ""))
     practitioner_url = safe_str(item.get("practitioner", {}).get("links", {}).get("self", ""))
     repeated_from_url = safe_str(item.get("repeated_from", {}).get("links", {}).get("self", ""))
-
+    
     appointment_type_id = safe_int(extract_last_segment(appointment_type_url))
     business_id = safe_int(extract_last_segment(business_url))
     patient_id = safe_int(extract_last_segment(patient_url))
     practitioner_id = safe_int(extract_last_segment(practitioner_url))
     repeated_from_id = safe_int(extract_last_segment(repeated_from_url))
-
+    
     return (
         appointment_type_id,
         parse_datetime(item.get("archived_at")),
@@ -410,7 +410,7 @@ def fetch_and_insert_data(session, client, base_url, transform_fn, table, column
     Generic fetcher that:
     - Uses Cliniko pagination via `links.next`
     - Collects data in batches
-    - Inserts into ClickHouse
+    - Inserts into ClickHouse (which uses ReplacingMergeTree to replace duplicates)
     """
     next_url = base_url
     batch = []
@@ -490,7 +490,7 @@ def main():
         show_in_online_bookings                   UInt8,
         telehealth_enabled                        UInt8,
         updated_at                                Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # Bookings
@@ -511,7 +511,7 @@ def main():
         repeat_number         UInt32,
         repeat_type           String,
         repeat_interval       UInt32
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # Availability Blocks
@@ -526,7 +526,7 @@ def main():
         repeat_number       UInt32,
         repeat_type         String,
         repeat_interval     UInt32
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # Unavailable Blocks
@@ -544,7 +544,7 @@ def main():
         repeat_number     UInt32,
         repeat_type       String,
         repeat_interval   UInt32
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # Practitioners
@@ -563,7 +563,7 @@ def main():
         title                   String,
         created_at              Nullable(DateTime64(3, 'UTC')),
         updated_at              Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # Practitioner Reference Numbers
@@ -575,7 +575,7 @@ def main():
         name              String,
         reference_number  String,
         updated_at        Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # Invoices
@@ -598,7 +598,7 @@ def main():
         tax_amount           Float64,
         total_amount         Float64,
         updated_at           Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # Invoice Items
@@ -619,7 +619,7 @@ def main():
         total_including_tax    Float64,
         unit_price             Float64,
         updated_at             Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # Patients
@@ -643,7 +643,7 @@ def main():
         last_name                 String,
         notes                     String,
         updated_at                Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # Communications
@@ -664,7 +664,7 @@ def main():
         comm_type                String,
         comm_type_code           UInt32,
         updated_at               Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # Businesses
@@ -693,12 +693,12 @@ def main():
         time_zone_identifier            String,
         updated_at                      Nullable(DateTime64(3, 'UTC')),
         website_address                 String
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
     # --- New Tables for Individual and Group Appointments ---
     client.command(f"""
-        CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_individual_appointments (
+        CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_appointments (
             appointment_type_id                  Int64,
             archived_at                          Nullable(DateTime64(3, 'UTC')),
             business_id                          Int64,
@@ -715,7 +715,7 @@ def main():
             repeated_from_id                     Int64,
             starts_at                            Nullable(DateTime64(3, 'UTC')),
             updated_at                           Nullable(DateTime64(3, 'UTC'))
-        ) ENGINE = MergeTree
+        ) ENGINE = ReplacingMergeTree(updated_at)
         ORDER BY id
         """)
     client.command(f"""
@@ -730,10 +730,10 @@ def main():
         notes                 String,
         telehealth_url        String,
         max_attendees         UInt32
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY id
     """)
-
+    
     # ---------- Fetch and Insert Calls ----------
     # Appointment Types
     appointment_types_url = "https://api.au4.cliniko.com/v1/appointment_types"
@@ -1031,8 +1031,9 @@ def main():
         f"{CLIENT_NAME}_cliniko_businesses",
         business_cols
     )
-    # Individual Appointments
-    individual_appointments_url = "https://api.au4.cliniko.com/v1/individual_appointments"
+    # Appointments (previously Individual Appointments)
+    # Note the change in URL from /individual_appointments to /appointments.
+    appointments_url = "https://api.au4.cliniko.com/v1/appointments"
     individual_appointment_cols = [
         "appointment_type_id",
         "archived_at",
@@ -1054,9 +1055,9 @@ def main():
     fetch_and_insert_data(
         session,
         client,
-        individual_appointments_url,
+        appointments_url,
         transform_individual_appointment,
-        f"{CLIENT_NAME}_cliniko_individual_appointments",
+        f"{CLIENT_NAME}_cliniko_appointments",
         individual_appointment_cols
     )
     # Group Appointments

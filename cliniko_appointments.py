@@ -15,7 +15,7 @@ def main():
     }
 
     # ---------- Fetch Appointment Data from Cliniko ----------
-    url = "https://api.au4.cliniko.com/v1/individual_appointments"
+    url = "https://api.au4.cliniko.com/v1/appointments"
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
         print("Error:", response.status_code, response.text)

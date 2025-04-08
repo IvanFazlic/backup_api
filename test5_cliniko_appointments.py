@@ -4,7 +4,7 @@ import datetime
 from clickhouse_connect import get_client
 from keys.keys import API_KEY, PASSWORD, HOST_CLICKHOUSE, CLIENT_NAME, CLIENT_INSTANCE
 
-BATCH_SIZE = 500  # For batch inserts
+BATCH_SIZE = 800  # For batch inserts
 
 # Helper conversion functions
 def safe_str(val):
@@ -698,7 +698,7 @@ def main():
     """)
     # --- New Tables for Individual and Group Appointments ---
     client.command(f"""
-        CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_individual_appointments (
+        CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_appointments (
             appointment_type_id                  Int64,
             archived_at                          Nullable(DateTime64(3, 'UTC')),
             business_id                          Int64,
@@ -1031,8 +1031,9 @@ def main():
         f"{CLIENT_NAME}_cliniko_businesses",
         business_cols
     )
-    # Individual Appointments
-    individual_appointments_url = "https://api.au4.cliniko.com/v1/individual_appointments"
+    # Appointments (previously Individual Appointments)
+    # Note the change in URL from /individual_appointments to /appointments.
+    appointments_url = "https://api.au4.cliniko.com/v1/appointments"
     individual_appointment_cols = [
         "appointment_type_id",
         "archived_at",
@@ -1054,9 +1055,9 @@ def main():
     fetch_and_insert_data(
         session,
         client,
-        individual_appointments_url,
+        appointments_url,
         transform_individual_appointment,
-        f"{CLIENT_NAME}_cliniko_individual_appointments",
+        f"{CLIENT_NAME}_cliniko_appointments",
         individual_appointment_cols
     )
     # Group Appointments
