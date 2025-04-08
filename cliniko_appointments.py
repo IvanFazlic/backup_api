@@ -15,13 +15,14 @@ def main():
     }
 
     # ---------- Fetch Appointment Data from Cliniko ----------
-    url = "'https://api.au4.cliniko.com/v1/practitioners/1377050527736538339'"
+    url = "https://api.au4.cliniko.com/v1/individual_appointments"
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
         print("Error:", response.status_code, response.text)
         raise SystemExit("Failed to fetch data from Cliniko")
 
     data = response.json()
+    print(data)
     # for d in data['appointments']:
     #     print(d , end="\n----------------")
     # The relevant list of appointments

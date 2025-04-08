@@ -48,6 +48,18 @@ def bool_to_uint8(value):
     """
     return 1 if value is True else 0
 
+def extract_last_segment(url: str) -> str:
+    """
+    Given a URL, split it by '/' (removing any trailing slash) and return the last segment.
+    For example:
+      url = "https://api.au1.cliniko.com/v1/patients/1"
+      returns "1"
+    """
+    if not url:
+        return ""
+    segments = url.rstrip("/").split("/")
+    return segments[-1]
+
 # Transformation functions for existing endpoints
 
 def transform_appointment_type(item):
@@ -305,10 +317,16 @@ def transform_business(item):
 
 # --- New Transformation Functions for Individual and Group Appointments ---
 
-# --- New Transformation Function for Individual Appointments with Updated Fields ---
 def transform_individual_appointment(item):
     """
     Transforms individual appointment data from Cliniko API.
+    Extracts IDs from nested URL links for:
+      - appointment_type_id from appointment_type->links->self
+      - business_id from business->links->self
+      - patient_id from patient->links->self
+      - practitioner_id from practitioner->links->self
+      - repeated_from_id from repeated_from->links->self
+
     Expected fields (with updated types):
       - appointment_type_id: int64
       - archived_at: date-time
@@ -325,22 +343,35 @@ def transform_individual_appointment(item):
       - starts_at: date-time
       - updated_at: date-time
     """
+    appointment_type_url = safe_str(item.get("appointment_type", {}).get("links", {}).get("self", ""))
+    business_url = safe_str(item.get("business", {}).get("links", {}).get("self", ""))
+    patient_url = safe_str(item.get("patient", {}).get("links", {}).get("self", ""))
+    practitioner_url = safe_str(item.get("practitioner", {}).get("links", {}).get("self", ""))
+    repeated_from_url = safe_str(item.get("repeated_from", {}).get("links", {}).get("self", ""))
+
+    appointment_type_id = safe_int(extract_last_segment(appointment_type_url))
+    business_id = safe_int(extract_last_segment(business_url))
+    patient_id = safe_int(extract_last_segment(patient_url))
+    practitioner_id = safe_int(extract_last_segment(practitioner_url))
+    repeated_from_id = safe_int(extract_last_segment(repeated_from_url))
+
     return (
-        safe_int(item.get("appointment_type_id")),
+        appointment_type_id,
         parse_datetime(item.get("archived_at")),
-        safe_int(item.get("business_id")),
+        business_id,
         parse_datetime(item.get("cancelled_at")),
         parse_datetime(item.get("created_at")),
         parse_datetime(item.get("deleted_at")),
         bool_to_uint8(item.get("did_not_arrive")),
         parse_datetime(item.get("ends_at")),
         safe_int(item.get("id")),
-        safe_int(item.get("patient_id")),
-        safe_int(item.get("practitioner_id")),
-        safe_int(item.get("repeated_from_id")),
+        patient_id,
+        practitioner_id,
+        repeated_from_id,
         parse_datetime(item.get("starts_at")),
         parse_datetime(item.get("updated_at"))
     )
+
 def transform_group_appointment(item):
     """
     Transforms group appointment data from Cliniko API.
@@ -357,6 +388,7 @@ def transform_group_appointment(item):
     """
     return (
         safe_int(item.get("id")),
+        safe_str(CLIENT_INSTANCE),
         parse_datetime(item.get("archived_at")),
         parse_datetime(item.get("created_at")),
         parse_datetime(item.get("updated_at")),
@@ -366,7 +398,6 @@ def transform_group_appointment(item):
         safe_str(item.get("telehealth_url")),
         safe_int(item.get("max_attendees"))
     )
-
 
 # --- Generic Fetcher Function ---
 
@@ -1034,14 +1065,14 @@ def main():
         "telehealth_url",
         "max_attendees"
     ]
-    fetch_and_insert_data(
-        session,
-        client,
-        group_appointments_url,
-        transform_group_appointment,
-        f"{CLIENT_NAME}_cliniko_group_appointments",
-        group_appointment_cols
-    )
+    # fetch_and_insert_data(
+    #     session,
+    #     client,
+    #     group_appointments_url,
+    #     transform_group_appointment,
+    #     f"{CLIENT_NAME}_cliniko_group_appointments",
+    #     group_appointment_cols
+    # )
 
 if __name__ == "__main__":
     main()
