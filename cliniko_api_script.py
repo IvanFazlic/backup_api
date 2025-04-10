@@ -490,7 +490,7 @@ def main():
         show_in_online_bookings                   UInt8,
         telehealth_enabled                        UInt8,
         updated_at                                Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # Bookings
@@ -511,7 +511,7 @@ def main():
         repeat_number         UInt32,
         repeat_type           String,
         repeat_interval       UInt32
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # Availability Blocks
@@ -526,7 +526,7 @@ def main():
         repeat_number       UInt32,
         repeat_type         String,
         repeat_interval     UInt32
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # Unavailable Blocks
@@ -544,7 +544,7 @@ def main():
         repeat_number     UInt32,
         repeat_type       String,
         repeat_interval   UInt32
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # Practitioners
@@ -563,7 +563,7 @@ def main():
         title                   String,
         created_at              Nullable(DateTime64(3, 'UTC')),
         updated_at              Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # Practitioner Reference Numbers
@@ -575,7 +575,7 @@ def main():
         name              String,
         reference_number  String,
         updated_at        Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # Invoices
@@ -598,7 +598,7 @@ def main():
         tax_amount           Float64,
         total_amount         Float64,
         updated_at           Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # Invoice Items
@@ -619,7 +619,7 @@ def main():
         total_including_tax    Float64,
         unit_price             Float64,
         updated_at             Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # Patients
@@ -643,7 +643,7 @@ def main():
         last_name                 String,
         notes                     String,
         updated_at                Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # Communications
@@ -664,7 +664,7 @@ def main():
         comm_type                String,
         comm_type_code           UInt32,
         updated_at               Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # Businesses
@@ -693,7 +693,7 @@ def main():
         time_zone_identifier            String,
         updated_at                      Nullable(DateTime64(3, 'UTC')),
         website_address                 String
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     # --- New Tables for Individual and Group Appointments ---
@@ -715,7 +715,7 @@ def main():
             repeated_from_id                     Int64,
             starts_at                            Nullable(DateTime64(3, 'UTC')),
             updated_at                           Nullable(DateTime64(3, 'UTC'))
-        ) ENGINE = ReplacingMergeTree(updated_at)
+        ) ENGINE = MergeTree()
         ORDER BY id
         """)
     client.command(f"""
@@ -730,7 +730,7 @@ def main():
         notes                 String,
         telehealth_url        String,
         max_attendees         UInt32
-    ) ENGINE = ReplacingMergeTree(updated_at)
+    ) ENGINE = MergeTree()
     ORDER BY id
     """)
     

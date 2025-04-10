@@ -67,7 +67,7 @@ def transform_appointment_type(item):
     Transforms appointment type data from Cliniko API.
     """
     return (
-        safe_str(item.get("id")),
+        safe_int(item.get("id")),  # Changed from safe_str to safe_int
         safe_str(CLIENT_INSTANCE),
         bool_to_uint8(item.get("add_deposit_to_account_credit")),
         safe_array(item.get("appointment_confirmation_template_ids")),
@@ -96,7 +96,7 @@ def transform_booking(item):
     """
     repeat_rule = item.get("repeat_rule", {})
     return (
-        safe_str(item.get("id")),
+        safe_int(item.get("id")),  # Changed from safe_str to safe_int
         safe_str(CLIENT_INSTANCE),
         parse_datetime(item.get("archived_at")),
         parse_datetime(item.get("created_at")),
@@ -119,7 +119,7 @@ def transform_availability_block(item):
     """
     repeat_rule = item.get("repeat_rule", {})
     return (
-        safe_str(item.get("id")),
+        safe_int(item.get("id")),  # Changed type here
         safe_str(CLIENT_INSTANCE),
         parse_datetime(item.get("created_at")),
         parse_datetime(item.get("ends_at")),
@@ -136,7 +136,7 @@ def transform_unavailable_block(item):
     """
     repeat_rule = item.get("repeat_rule", {})
     return (
-        safe_str(item.get("id")),
+        safe_int(item.get("id")),  # Changed
         safe_str(CLIENT_INSTANCE),
         parse_datetime(item.get("archived_at")),
         parse_datetime(item.get("created_at")),
@@ -155,7 +155,7 @@ def transform_practitioner(item):
     Transforms practitioner data from Cliniko API.
     """
     return (
-        safe_str(item.get("id")),
+        safe_int(item.get("id")),  # Changed
         safe_str(CLIENT_INSTANCE),
         bool_to_uint8(item.get("active")),
         safe_str(item.get("description")),
@@ -175,7 +175,7 @@ def transform_practitioner_reference_number(item):
     Transforms practitioner reference number data from Cliniko API.
     """
     return (
-        safe_str(item.get("id")),
+        safe_int(item.get("id")),  # Changed
         safe_str(CLIENT_INSTANCE),
         parse_datetime(item.get("created_at")),
         safe_str(item.get("name")),
@@ -190,7 +190,7 @@ def transform_invoice(item):
     def as_float(s):
         return safe_float(s)
     return (
-        safe_str(item.get("id")),
+        safe_int(item.get("id")),  # Changed
         safe_str(CLIENT_INSTANCE),
         parse_datetime(item.get("archived_at")),
         parse_datetime(item.get("closed_at")),
@@ -216,7 +216,7 @@ def transform_invoice_item(item):
     def as_float(s):
         return safe_float(s)
     return (
-        safe_str(item.get("id")),
+        safe_int(item.get("id")),  # Changed
         safe_str(CLIENT_INSTANCE),
         parse_datetime(item.get("archived_at")),
         parse_datetime(item.get("created_at")),
@@ -238,7 +238,7 @@ def transform_patient(patient):
     Transforms patient data from Cliniko API.
     """
     return (
-        safe_str(patient.get("id")),
+        safe_int(patient.get("id")),  # Changed
         safe_str(CLIENT_INSTANCE),
         bool_to_uint8(patient.get("accepted_email_marketing")),
         bool_to_uint8(patient.get("accepted_privacy_policy")),
@@ -268,7 +268,7 @@ def transform_communication(item):
     comm_type = safe_str(item.get("type"))
     comm_type_code = safe_int(item.get("type_code"))
     return (
-        safe_str(item.get("id")),
+        safe_int(item.get("id")),  # Changed
         safe_str(CLIENT_INSTANCE),
         parse_datetime(item.get("archived_at")),
         safe_str(item.get("category")),
@@ -290,7 +290,7 @@ def transform_business(item):
     Transforms business data from Cliniko API.
     """
     return (
-        safe_str(item.get("id")),
+        safe_int(item.get("id")),  # Changed
         safe_str(CLIENT_INSTANCE),
         safe_str(item.get("additional_information")),
         safe_str(item.get("additional_invoice_information")),
@@ -320,43 +320,20 @@ def transform_business(item):
 def transform_individual_appointment(item):
     """
     Transforms individual appointment data from Cliniko API.
-    Extracts IDs from nested URL links for:
-      - appointment_type_id from appointment_type->links->self
-      - business_id from business->links->self
-      - patient_id from patient->links->self
-      - practitioner_id from practitioner->links->self
-      - repeated_from_id from repeated_from->links->self
-
-    Expected fields (with updated types):
-      - appointment_type_id: int64
-      - archived_at: date-time
-      - business_id: int64
-      - cancelled_at: date-time
-      - cancellation_reason: int64
-      - cancellation_reason_description: string
-      - created_at: date-time
-      - deleted_at: date-time
-      - did_not_arrive: boolean
-      - ends_at: date-time
-      - id: int64
-      - patient_id: int64
-      - practitioner_id: int64
-      - repeated_from_id: int64
-      - starts_at: date-time
-      - updated_at: date-time
+    Extracts IDs from nested URL links.
     """
     appointment_type_url = safe_str(item.get("appointment_type", {}).get("links", {}).get("self", ""))
     business_url = safe_str(item.get("business", {}).get("links", {}).get("self", ""))
     patient_url = safe_str(item.get("patient", {}).get("links", {}).get("self", ""))
     practitioner_url = safe_str(item.get("practitioner", {}).get("links", {}).get("self", ""))
     repeated_from_url = safe_str(item.get("repeated_from", {}).get("links", {}).get("self", ""))
-
+    
     appointment_type_id = safe_int(extract_last_segment(appointment_type_url))
     business_id = safe_int(extract_last_segment(business_url))
     patient_id = safe_int(extract_last_segment(patient_url))
     practitioner_id = safe_int(extract_last_segment(practitioner_url))
     repeated_from_id = safe_int(extract_last_segment(repeated_from_url))
-
+    
     return (
         appointment_type_id,
         parse_datetime(item.get("archived_at")),
@@ -368,7 +345,7 @@ def transform_individual_appointment(item):
         parse_datetime(item.get("deleted_at")),
         bool_to_uint8(item.get("did_not_arrive")),
         parse_datetime(item.get("ends_at")),
-        safe_int(item.get("id")),
+        safe_int(item.get("id")),  # Here id is converted to int
         patient_id,
         practitioner_id,
         repeated_from_id,
@@ -379,19 +356,9 @@ def transform_individual_appointment(item):
 def transform_group_appointment(item):
     """
     Transforms group appointment data from Cliniko API.
-    Expected fields (with updated types):
-      - id: int64
-      - archived_at: date-time
-      - created_at: date-time
-      - updated_at: date-time
-      - starts_at: date-time
-      - ends_at: date-time
-      - notes: string
-      - telehealth_url: string
-      - max_attendees: int64
     """
     return (
-        safe_int(item.get("id")),
+        safe_int(item.get("id")),  # Changed
         safe_str(CLIENT_INSTANCE),
         parse_datetime(item.get("archived_at")),
         parse_datetime(item.get("created_at")),
@@ -410,7 +377,7 @@ def fetch_and_insert_data(session, client, base_url, transform_fn, table, column
     Generic fetcher that:
     - Uses Cliniko pagination via `links.next`
     - Collects data in batches
-    - Inserts into ClickHouse
+    - Inserts into ClickHouse (which uses ReplacingMergeTree to replace duplicates)
     """
     next_url = base_url
     batch = []
@@ -420,7 +387,6 @@ def fetch_and_insert_data(session, client, base_url, transform_fn, table, column
             print("Error:", response.status_code, response.text)
             raise SystemExit("Failed to fetch data from Cliniko")
         data = response.json()
-        # Determine the key that contains the array of items.
         top_keys = [k for k in data.keys() if k not in ("links", "total_entries")]
         if not top_keys:
             print(f"No data found in response for {table}.")
@@ -465,11 +431,11 @@ def main():
         secure=True
     )
 
-    # ---------- Create Tables in ClickHouse ----------
+    # ---------- Create Tables in ClickHouse using ReplacingMergeTree ----------
     # Appointment Types
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_appointment_types (
-        id                                        String,
+        id                                        UInt64,
         client_instance                           String,
         add_deposit_to_account_credit             UInt8,
         appointment_confirmation_template_ids     Array(String),
@@ -490,13 +456,13 @@ def main():
         show_in_online_bookings                   UInt8,
         telehealth_enabled                        UInt8,
         updated_at                                Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # Bookings
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_bookings (
-        id                    String,
+        id                    UInt64,
         client_instance       String,
         archived_at           Nullable(DateTime64(3, 'UTC')),
         created_at            Nullable(DateTime64(3, 'UTC')),
@@ -511,13 +477,13 @@ def main():
         repeat_number         UInt32,
         repeat_type           String,
         repeat_interval       UInt32
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # Availability Blocks
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_availability_blocks (
-        id                  String,
+        id                  UInt64,
         client_instance     String,
         created_at          Nullable(DateTime64(3, 'UTC')),
         ends_at             Nullable(DateTime64(3, 'UTC')),
@@ -526,13 +492,13 @@ def main():
         repeat_number       UInt32,
         repeat_type         String,
         repeat_interval     UInt32
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # Unavailable Blocks
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_unavailable_blocks (
-        id                String,
+        id                UInt64,
         client_instance   String,
         archived_at       Nullable(DateTime64(3, 'UTC')),
         created_at        Nullable(DateTime64(3, 'UTC')),
@@ -544,13 +510,13 @@ def main():
         repeat_number     UInt32,
         repeat_type       String,
         repeat_interval   UInt32
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # Practitioners
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_practitioners (
-        id                      String,
+        id                      UInt64,
         client_instance         String,
         active                  UInt8,
         description             String,
@@ -563,25 +529,25 @@ def main():
         title                   String,
         created_at              Nullable(DateTime64(3, 'UTC')),
         updated_at              Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # Practitioner Reference Numbers
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_practitioner_reference_numbers (
-        id                String,
+        id                UInt64,
         client_instance   String,
         created_at        Nullable(DateTime64(3, 'UTC')),
         name              String,
         reference_number  String,
         updated_at        Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # Invoices
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_invoices (
-        id                   String,
+        id                   UInt64,
         client_instance      String,
         archived_at          Nullable(DateTime64(3, 'UTC')),
         closed_at            Nullable(DateTime64(3, 'UTC')),
@@ -598,13 +564,13 @@ def main():
         tax_amount           Float64,
         total_amount         Float64,
         updated_at           Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # Invoice Items
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_invoice_items (
-        id                     String,
+        id                     UInt64,
         client_instance        String,
         archived_at            Nullable(DateTime64(3, 'UTC')),
         created_at             Nullable(DateTime64(3, 'UTC')),
@@ -619,13 +585,13 @@ def main():
         total_including_tax    Float64,
         unit_price             Float64,
         updated_at             Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # Patients
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_patients (
-        id                     String,
+        id                     UInt64,
         client_instance        String,
         accepted_email_marketing  UInt8,
         accepted_privacy_policy   UInt8,
@@ -643,13 +609,13 @@ def main():
         last_name                 String,
         notes                     String,
         updated_at                Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # Communications
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_communications (
-        id                       String,
+        id                       UInt64,
         client_instance          String,
         archived_at              Nullable(DateTime64(3, 'UTC')),
         category                 String,
@@ -664,13 +630,13 @@ def main():
         comm_type                String,
         comm_type_code           UInt32,
         updated_at               Nullable(DateTime64(3, 'UTC'))
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # Businesses
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_businesses (
-        id                              String,
+        id                              UInt64,
         client_instance                 String,
         additional_information          String,
         additional_invoice_information  String,
@@ -693,7 +659,7 @@ def main():
         time_zone_identifier            String,
         updated_at                      Nullable(DateTime64(3, 'UTC')),
         website_address                 String
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
     # --- New Tables for Individual and Group Appointments ---
@@ -709,18 +675,18 @@ def main():
             deleted_at                           Nullable(DateTime64(3, 'UTC')),
             did_not_arrive                       UInt8,
             ends_at                              Nullable(DateTime64(3, 'UTC')),
-            id                                   Int64,
+            id                                   Int64,  -- Already numeric
             patient_id                           Int64,
             practitioner_id                      Int64,
             repeated_from_id                     Int64,
             starts_at                            Nullable(DateTime64(3, 'UTC')),
             updated_at                           Nullable(DateTime64(3, 'UTC'))
-        ) ENGINE = MergeTree
+        ) ENGINE = ReplacingMergeTree(id)
         ORDER BY id
         """)
     client.command(f"""
     CREATE TABLE IF NOT EXISTS {CLIENT_NAME}_cliniko_group_appointments (
-        id                    String,
+        id                    UInt64,
         client_instance       String,
         archived_at           Nullable(DateTime64(3, 'UTC')),
         created_at            Nullable(DateTime64(3, 'UTC')),
@@ -730,12 +696,11 @@ def main():
         notes                 String,
         telehealth_url        String,
         max_attendees         UInt32
-    ) ENGINE = MergeTree
+    ) ENGINE = ReplacingMergeTree(id)
     ORDER BY id
     """)
-
+    
     # ---------- Fetch and Insert Calls ----------
-    # Appointment Types
     appointment_types_url = "https://api.au4.cliniko.com/v1/appointment_types"
     appointment_type_cols = [
         "id",
@@ -768,7 +733,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_appointment_types",
         appointment_type_cols
     )
-    # Bookings
     bookings_url = "https://api.au4.cliniko.com/v1/bookings"
     booking_cols = [
         "id",
@@ -795,7 +759,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_bookings",
         booking_cols
     )
-    # Availability Blocks
     availability_blocks_url = "https://api.au4.cliniko.com/v1/availability_blocks"
     availability_block_cols = [
         "id",
@@ -816,7 +779,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_availability_blocks",
         availability_block_cols
     )
-    # Unavailable Blocks
     unavailable_blocks_url = "https://api.au4.cliniko.com/v1/unavailable_blocks"
     unavailable_block_cols = [
         "id",
@@ -840,7 +802,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_unavailable_blocks",
         unavailable_block_cols
     )
-    # Practitioners
     practitioners_url = "https://api.au4.cliniko.com/v1/practitioners"
     practitioner_cols = [
         "id",
@@ -865,7 +826,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_practitioners",
         practitioner_cols
     )
-    # Practitioner Reference Numbers
     practitioner_ref_url = "https://api.au4.cliniko.com/v1/practitioner_reference_numbers"
     practitioner_ref_cols = [
         "id",
@@ -883,7 +843,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_practitioner_reference_numbers",
         practitioner_ref_cols
     )
-    # Invoices
     invoices_url = "https://api.au4.cliniko.com/v1/invoices"
     invoice_cols = [
         "id",
@@ -912,7 +871,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_invoices",
         invoice_cols
     )
-    # Invoice Items
     invoice_items_url = "https://api.au4.cliniko.com/v1/invoice_items"
     invoice_item_cols = [
         "id",
@@ -939,7 +897,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_invoice_items",
         invoice_item_cols
     )
-    # Patients
     patients_url = "https://api.au4.cliniko.com/v1/patients"
     patient_cols = [
         "id",
@@ -969,7 +926,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_patients",
         patient_cols
     )
-    # Communications
     communications_url = "https://api.au4.cliniko.com/v1/communications"
     communication_cols = [
         "id",
@@ -996,7 +952,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_communications",
         communication_cols
     )
-    # Businesses
     businesses_url = "https://api.au4.cliniko.com/v1/businesses"
     business_cols = [
         "id",
@@ -1031,8 +986,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_businesses",
         business_cols
     )
-    # Appointments (previously Individual Appointments)
-    # Note the change in URL from /individual_appointments to /appointments.
     appointments_url = "https://api.au4.cliniko.com/v1/appointments"
     individual_appointment_cols = [
         "appointment_type_id",
@@ -1060,7 +1013,6 @@ def main():
         f"{CLIENT_NAME}_cliniko_appointments",
         individual_appointment_cols
     )
-    # Group Appointments
     group_appointments_url = "https://api.au4.cliniko.com/v1/group_appointments"
     group_appointment_cols = [
         "id",
@@ -1083,6 +1035,21 @@ def main():
     #     f"{CLIENT_NAME}_cliniko_group_appointments",
     #     group_appointment_cols
     # )
-
+    print("Triggering deduplication merge")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_appointment_types FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_bookings FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_availability_blocks FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_unavailable_blocks FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_practitioners FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_practitioner_reference_numbers FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_invoices FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_invoice_items FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_patients FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_communications FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_businesses FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_appointments FINAL")
+    client.command(f"OPTIMIZE TABLE {CLIENT_NAME}_cliniko_group_appointments FINAL")
+    print("Done")
+    
 if __name__ == "__main__":
     main()
