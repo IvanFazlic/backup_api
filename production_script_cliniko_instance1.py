@@ -2,7 +2,7 @@ import base64
 import requests
 import datetime
 from clickhouse_connect import get_client
-from keys.keys import API_KEY, PASSWORD, HOST_CLICKHOUSE, CLIENT_NAME, CLIENT_INSTANCE
+from keys.keys import API_KEY, PASSWORD, HOST_CLICKHOUSE, CLIENT_NAME, CLIENT_INSTANCE, URL_SHARD
 
 BATCH_SIZE = 800  # For batch inserts
 
@@ -52,7 +52,7 @@ def extract_last_segment(url: str) -> str:
     """
     Given a URL, split it by '/' (removing any trailing slash) and return the last segment.
     For example:
-      url = "https://api.au1.cliniko.com/v1/patients/1"
+      url = "https://api.au4.cliniko.com/v1/patients/1"
       returns "1"
     """
     if not url:
@@ -701,7 +701,7 @@ def main():
     """)
     
     # ---------- Fetch and Insert Calls ----------
-    appointment_types_url = "https://api.au4.cliniko.com/v1/appointment_types"
+    appointment_types_url = f"{URL_SHARD}/appointment_types"
     appointment_type_cols = [
         "id",
         "client_instance",
@@ -733,7 +733,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_appointment_types",
         appointment_type_cols
     )
-    bookings_url = "https://api.au4.cliniko.com/v1/bookings"
+    bookings_url = f"{URL_SHARD}/bookings"
     booking_cols = [
         "id",
         "client_instance",
@@ -759,7 +759,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_bookings",
         booking_cols
     )
-    availability_blocks_url = "https://api.au4.cliniko.com/v1/availability_blocks"
+    availability_blocks_url = f"{URL_SHARD}/availability_blocks"
     availability_block_cols = [
         "id",
         "client_instance",
@@ -779,7 +779,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_availability_blocks",
         availability_block_cols
     )
-    unavailable_blocks_url = "https://api.au4.cliniko.com/v1/unavailable_blocks"
+    unavailable_blocks_url = f"{URL_SHARD}/unavailable_blocks"
     unavailable_block_cols = [
         "id",
         "client_instance",
@@ -802,7 +802,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_unavailable_blocks",
         unavailable_block_cols
     )
-    practitioners_url = "https://api.au4.cliniko.com/v1/practitioners"
+    practitioners_url = f"{URL_SHARD}/practitioners"
     practitioner_cols = [
         "id",
         "client_instance",
@@ -826,7 +826,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_practitioners",
         practitioner_cols
     )
-    practitioner_ref_url = "https://api.au4.cliniko.com/v1/practitioner_reference_numbers"
+    practitioner_ref_url = f"{URL_SHARD}/practitioner_reference_numbers"
     practitioner_ref_cols = [
         "id",
         "client_instance",
@@ -843,7 +843,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_practitioner_reference_numbers",
         practitioner_ref_cols
     )
-    invoices_url = "https://api.au4.cliniko.com/v1/invoices"
+    invoices_url = f"{URL_SHARD}/invoices"
     invoice_cols = [
         "id",
         "client_instance",
@@ -871,7 +871,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_invoices",
         invoice_cols
     )
-    invoice_items_url = "https://api.au4.cliniko.com/v1/invoice_items"
+    invoice_items_url = f"{URL_SHARD}/invoice_items"
     invoice_item_cols = [
         "id",
         "client_instance",
@@ -897,7 +897,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_invoice_items",
         invoice_item_cols
     )
-    patients_url = "https://api.au4.cliniko.com/v1/patients"
+    patients_url = f"{URL_SHARD}/patients"
     patient_cols = [
         "id",
         "client_instance",
@@ -926,7 +926,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_patients",
         patient_cols
     )
-    communications_url = "https://api.au4.cliniko.com/v1/communications"
+    communications_url = f"{URL_SHARD}/communications"
     communication_cols = [
         "id",
         "client_instance",
@@ -952,7 +952,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_communications",
         communication_cols
     )
-    businesses_url = "https://api.au4.cliniko.com/v1/businesses"
+    businesses_url = f"{URL_SHARD}/businesses"
     business_cols = [
         "id",
         "client_instance",
@@ -986,7 +986,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_businesses",
         business_cols
     )
-    appointments_url = "https://api.au4.cliniko.com/v1/appointments"
+    appointments_url = f"{URL_SHARD}/appointments"
     individual_appointment_cols = [
         "appointment_type_id",
         "archived_at",
@@ -1013,7 +1013,7 @@ def main():
         f"{CLIENT_NAME}_cliniko_appointments",
         individual_appointment_cols
     )
-    group_appointments_url = "https://api.au4.cliniko.com/v1/group_appointments"
+    group_appointments_url = f"{URL_SHARD}/group_appointments"
     group_appointment_cols = [
         "id",
         "client_instance",
